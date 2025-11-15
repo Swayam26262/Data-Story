@@ -1,0 +1,17 @@
+Campaign,Channel,Impressions,Clicks,Conversions,Cost,Revenue
+Spring_Sale,Email,50000,2500,125,1000,6250
+Summer_Promo,Social_Media,100000,3000,90,2000,4500
+Fall_Launch,Search_Ads,75000,4500,270,3000,13500
+Winter_Special,Display_Ads,120000,2400,72,1500,3600
+Q1_Campaign,Email,45000,2250,113,900,5650
+Q2_Campaign,Social_Media,95000,2850,86,1900,4300
+Q3_Campaign,Search_Ads,80000,4800,288,3200,14400
+Q4_Campaign,Display_Ads,110000,2200,66,1400,3300
+New_Product_A,Email,55000,2750,138,1100,6900
+New_Product_B,Social_Media,105000,3150,95,2100,4750
+Relaunch_X,Search_Ads,70000,4200,252,2800,12600
+Clearance_Sale,Display_Ads,130000,2600,78,1600,3900
+Holiday_Special,Email,60000,3000,150,1200,7500
+Back_to_School,Social_Media,90000,2700,81,1800,4050
+Black_Friday,Search_Ads,85000,5100,306,3400,15300
+Cyber_Monday,Display_Ads,125000,2500,75,1550,3750

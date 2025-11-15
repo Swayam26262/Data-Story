@@ -1,0 +1,52 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "crons": [
+    {
+      "path": "/api/cron/reset-usage",
+      "schedule": "0 0 1 * *"
+    },
+    {
+      "path": "/api/cron/monitor",
+      "schedule": "0 */6 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/health",
+      "destination": "/api/health"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "CLOUDINARY_CLOUD_NAME": "@cloudinary_cloud_name",
+    "CLOUDINARY_API_KEY": "@cloudinary_api_key",
+    "CLOUDINARY_API_SECRET": "@cloudinary_api_secret",
+    "JWT_SECRET": "@jwt_secret",
+    "CRON_SECRET": "@cron_secret",
+    "PYTHON_SERVICE_URL": "@python_service_url",
+    "NEXT_PUBLIC_APP_URL": "@next_public_app_url"
+  }
+}

@@ -11,15 +11,35 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
-    "prepare": "husky"
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch",
+    "test:e2e": "jest __tests__/e2e.test.ts --runInBand",
+    "prepare": "husky",
+    "create-indexes": "ts-node scripts/create-db-indexes.ts",
+    "audit:performance": "pwsh -File scripts/optimize-performance.ps1"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.932.0",
+    "@aws-sdk/s3-request-presigner": "^3.932.0",
+    "@types/uuid": "^11.0.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.8.0",
+    "dotenv": "^17.2.3",
+    "html2canvas": "^1.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "jspdf": "^3.0.3",
+    "mongoose": "^8.19.4",
     "next": "16.0.3",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "recharts": "^3.4.1",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -28,9 +48,11 @@
     "eslint-config-next": "16.0.3",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
+    "jest": "^30.2.0",
     "lint-staged": "^16.2.6",
     "prettier": "^3.6.2",
     "tailwindcss": "^4",
+    "ts-jest": "^29.4.5",
     "typescript": "^5"
   },
   "lint-staged": {

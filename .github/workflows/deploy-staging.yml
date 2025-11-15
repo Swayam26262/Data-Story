@@ -1,0 +1,117 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy-staging:
+    name: Deploy to Vercel Staging
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linting
+        run: npm run lint
+      
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: Deploy to Vercel Staging
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--env NODE_ENV=staging'
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+      
+      - name: Comment deployment URL on commit
+        uses: actions/github-script@v7
+        if: github.event_name == 'push'
+        with:
+          script: |
+            const deploymentUrl = '${{ steps.deploy.outputs.preview-url }}';
+            const message = `🚀 Staging deployment successful!\n\n**Preview URL:** ${deploymentUrl}`;
+            
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: message
+            });
+
+  smoke-test-staging:
+    name: Run Smoke Tests on Staging
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Health check - Frontend
+        run: |
+          echo "Checking frontend health..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ needs.deploy-staging.outputs.url }}/api/health || echo "000")
+          if [ "$response" != "200" ]; then
+            echo "Frontend health check failed with status: $response"
+            exit 1
+          fi
+          echo "Frontend health check passed!"
+      
+      - name: Health check - Python Service
+        run: |
+          echo "Checking Python service health..."
+          # Add Python service health check when available
+          echo "Python service health check skipped (not implemented yet)"
+        continue-on-error: true
+      
+      - name: Notify on Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Staging Deployment ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "🚀 *Staging Deployment ${{ job.status }}*\n*Branch:* `develop`\n*Commit:* ${{ github.sha }}\n*URL:* ${{ needs.deploy-staging.outputs.url }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true

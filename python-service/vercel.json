@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "main.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "main.py"
+    }
+  ],
+  "env": {
+    "MONGODB_URI": "@mongodb_uri",
+    "GEMINI_API_KEY": "@gemini_api_key",
+    "CLOUDINARY_CLOUD_NAME": "@cloudinary_cloud_name",
+    "CLOUDINARY_API_KEY": "@cloudinary_api_key",
+    "CLOUDINARY_API_SECRET": "@cloudinary_api_secret",
+    "ALLOWED_ORIGINS": "@allowed_origins",
+    "MIN_COLUMNS": "2",
+    "MIN_ROWS": "10",
+    "CORRELATION_THRESHOLD": "0.5"
+  },
+  "regions": ["iad1"]
+}
