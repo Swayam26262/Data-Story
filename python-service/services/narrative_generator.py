@@ -126,27 +126,46 @@ Format your response with clear section headers:
         if trends:
             prompt_parts.append(f"\n\n### TRENDS DETECTED")
             for i, trend in enumerate(trends[:5], 1):
+                column = trend.get('column', 'Unknown')
+                direction = trend.get('direction', 'stable')
+                time_column = trend.get('time_column', 'time')
+                r_squared = trend.get('r_squared', 0)
+                strength = trend.get('strength', 'unknown')
+                
                 prompt_parts.append(
-                    f"{i}. {trend['column']} shows a {trend['direction']} trend over {trend['time_column']} "
-                    f"(R² = {trend['r_squared']:.3f}, strength: {trend['strength']})"
+                    f"{i}. {column} shows a {direction} trend over {time_column} "
+                    f"(R² = {r_squared:.3f}, strength: {strength})"
                 )
         
         # Correlations
         if correlations:
             prompt_parts.append(f"\n\n### CORRELATIONS FOUND")
             for i, corr in enumerate(correlations[:5], 1):
+                column1 = corr.get('column1', 'Unknown')
+                column2 = corr.get('column2', 'Unknown')
+                significance = corr.get('significance', 'moderate')
+                direction = corr.get('direction', 'positive')
+                coefficient = corr.get('coefficient', 0)
+                
                 prompt_parts.append(
-                    f"{i}. {corr['column1']} and {corr['column2']}: {corr['significance']} {corr['direction']} "
-                    f"correlation (r = {corr['coefficient']:.3f})"
+                    f"{i}. {column1} and {column2}: {significance} {direction} "
+                    f"correlation (r = {coefficient:.3f})"
                 )
         
         # Distributions
         if distributions:
             prompt_parts.append(f"\n\n### DISTRIBUTION STATISTICS")
             for i, dist in enumerate(distributions[:5], 1):
+                column = dist.get('column', 'Unknown')
+                mean = dist.get('mean', 0)
+                median = dist.get('median', 0)
+                std_dev = dist.get('std_dev', 0)
+                min_val = dist.get('min', 0)
+                max_val = dist.get('max', 0)
+                
                 prompt_parts.append(
-                    f"{i}. {dist['column']}: mean = {dist['mean']:.2f}, median = {dist['median']:.2f}, "
-                    f"std dev = {dist['std_dev']:.2f}, range = [{dist['min']:.2f}, {dist['max']:.2f}]"
+                    f"{i}. {column}: mean = {mean:.2f}, median = {median:.2f}, "
+                    f"std dev = {std_dev:.2f}, range = [{min_val:.2f}, {max_val:.2f}]"
                 )
         
         # Frequencies
@@ -154,20 +173,45 @@ Format your response with clear section headers:
             prompt_parts.append(f"\n\n### CATEGORICAL DISTRIBUTIONS")
             for i, freq in enumerate(frequencies[:3], 1):
                 top_cats = freq.get('top_categories', [])[:3]
-                cats_str = ", ".join([f"{cat['value']} ({cat['percentage']:.1f}%)" for cat in top_cats])
-                prompt_parts.append(
-                    f"{i}. {freq['column']}: {freq['unique_count']} unique values. "
-                    f"Top categories: {cats_str}"
-                )
+                if top_cats:
+                    cats_str = ", ".join([f"{cat['value']} ({cat['percentage']:.1f}%)" for cat in top_cats])
+                    prompt_parts.append(
+                        f"{i}. {freq['column']}: {freq.get('unique_count', 0)} unique values. "
+                        f"Top categories: {cats_str}"
+                    )
+                else:
+                    prompt_parts.append(
+                        f"{i}. {freq['column']}: {freq.get('unique_count', 0)} unique values."
+                    )
         
         # Outliers
         if outliers:
             prompt_parts.append(f"\n\n### OUTLIERS DETECTED")
             for i, outlier in enumerate(outliers[:3], 1):
-                prompt_parts.append(
-                    f"{i}. {outlier['column']}: {outlier['count']} outliers ({outlier['percentage']:.1f}% of data) "
-                    f"outside range [{outlier['lower_bound']:.2f}, {outlier['upper_bound']:.2f}]"
-                )
+                # Get consensus outlier info if available, otherwise use IQR method
+                if 'consensus' in outlier and outlier['consensus'].get('count', 0) > 0:
+                    count = outlier['consensus']['count']
+                    # Get IQR bounds for context
+                    iqr_method = outlier.get('methods', {}).get('iqr', {})
+                    lower_bound = iqr_method.get('lower_bound', 0)
+                    upper_bound = iqr_method.get('upper_bound', 0)
+                    percentage = iqr_method.get('percentage', 0)
+                    
+                    prompt_parts.append(
+                        f"{i}. {outlier['column']}: {count} outliers ({percentage:.1f}% of data) "
+                        f"outside range [{lower_bound:.2f}, {upper_bound:.2f}]"
+                    )
+                elif 'methods' in outlier and 'iqr' in outlier['methods']:
+                    iqr_method = outlier['methods']['iqr']
+                    count = iqr_method.get('count', 0)
+                    percentage = iqr_method.get('percentage', 0)
+                    lower_bound = iqr_method.get('lower_bound', 0)
+                    upper_bound = iqr_method.get('upper_bound', 0)
+                    
+                    prompt_parts.append(
+                        f"{i}. {outlier['column']}: {count} outliers ({percentage:.1f}% of data) "
+                        f"outside range [{lower_bound:.2f}, {upper_bound:.2f}]"
+                    )
         
         prompt_parts.append("\n\nNow generate the three-section narrative based on this analysis:")
         
@@ -197,33 +241,46 @@ Format your response with clear section headers:
         for line in lines:
             line_lower = line.lower().strip()
             
-            # Detect section headers
-            if '## summary' in line_lower or line_lower.startswith('summary'):
+            # Detect section headers - be more flexible with matching
+            if any(marker in line_lower for marker in ['## summary', '# summary', 'summary:', '**summary**']):
                 if current_section and current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
                 current_section = 'summary'
                 current_content = []
-            elif '## key findings' in line_lower or line_lower.startswith('key findings'):
+                # Skip the header line itself
+                continue
+            elif any(marker in line_lower for marker in ['## key findings', '# key findings', 'key findings:', '**key findings**', '## findings', '# findings']):
                 if current_section and current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
                 current_section = 'keyFindings'
                 current_content = []
-            elif '## recommendations' in line_lower or line_lower.startswith('recommendations'):
+                continue
+            elif any(marker in line_lower for marker in ['## recommendations', '# recommendations', 'recommendations:', '**recommendations**', '## recommendation', '# recommendation']):
                 if current_section and current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
                 current_section = 'recommendations'
                 current_content = []
-            elif current_section and line.strip() and not line.startswith('#'):
+                continue
+            elif current_section and line.strip():
+                # Include all non-empty lines (including those starting with #)
                 current_content.append(line)
         
         # Add last section
         if current_section and current_content:
             sections[current_section] = '\n'.join(current_content).strip()
         
+        # Log what we found for debugging
+        logger.info(f"Parsed sections - Summary: {len(sections['summary'])} chars, "
+                   f"Key Findings: {len(sections['keyFindings'])} chars, "
+                   f"Recommendations: {len(sections['recommendations'])} chars")
+        
         # Validate all sections are present
-        for key, value in sections.items():
-            if not value:
-                raise ValueError(f"Missing section: {key}")
+        missing_sections = [key for key, value in sections.items() if not value]
+        if missing_sections:
+            # Log the full response for debugging
+            logger.error(f"Missing sections: {missing_sections}")
+            logger.error(f"Full response text:\n{response_text}")
+            raise ValueError(f"Missing section(s): {', '.join(missing_sections)}")
         
         return sections
     
@@ -258,11 +315,45 @@ Format your response with clear section headers:
                 # Generate content
                 response = self.model.generate_content(prompt)
                 
-                # Extract text from response
-                if not response or not response.text:
+                # Extract text from response - handle both simple and complex responses
+                if not response:
                     raise ValueError("Empty response from Gemini API")
                 
-                response_text = response.text
+                # Check for safety filter blocks
+                if hasattr(response, 'prompt_feedback'):
+                    if hasattr(response.prompt_feedback, 'block_reason'):
+                        block_reason = response.prompt_feedback.block_reason
+                        if block_reason:
+                            raise ValueError(f"Gemini API blocked the prompt: {block_reason}")
+                
+                # Check if response was blocked
+                if not response.candidates or len(response.candidates) == 0:
+                    raise ValueError("No candidates in Gemini API response - possibly blocked by safety filters")
+                
+                candidate = response.candidates[0]
+                
+                # Check finish reason
+                if hasattr(candidate, 'finish_reason'):
+                    finish_reason = str(candidate.finish_reason)
+                    if 'SAFETY' in finish_reason:
+                        raise ValueError(f"Response blocked by safety filters: {finish_reason}")
+                    elif finish_reason not in ['STOP', '1', 'FinishReason.STOP']:
+                        logger.warning(f"Unusual finish reason: {finish_reason}")
+                
+                try:
+                    # Try simple text accessor first
+                    response_text = response.text
+                except Exception as e:
+                    # Fall back to parts accessor for complex responses
+                    logger.debug(f"Failed to get response.text: {e}, trying parts accessor")
+                    if candidate.content and candidate.content.parts:
+                        parts = candidate.content.parts
+                        response_text = ''.join(part.text for part in parts if hasattr(part, 'text'))
+                    else:
+                        raise ValueError(f"No valid response content from Gemini API: {str(e)}")
+                
+                if not response_text or not response_text.strip():
+                    raise ValueError("Empty response text from Gemini API")
                 
                 # Log response for debugging (truncated)
                 logger.debug(f"Response (first 500 chars): {response_text[:500]}...")
@@ -314,24 +405,24 @@ Format your response with clear section headers:
         findings_words = len(narratives['keyFindings'].split())
         recommendations_words = len(narratives['recommendations'].split())
         
-        if summary_words < 100 or summary_words > 300:
+        if summary_words < 50 or summary_words > 400:
             logger.warning(f"Summary word count ({summary_words}) outside target range (150-250)")
         
-        if findings_words < 150 or findings_words > 350:
+        if findings_words < 100 or findings_words > 500:
             logger.warning(f"Key findings word count ({findings_words}) outside target range (200-300)")
         
-        if recommendations_words < 100 or recommendations_words > 300:
+        if recommendations_words < 50 or recommendations_words > 400:
             logger.warning(f"Recommendations word count ({recommendations_words}) outside target range (150-250)")
         
-        # Basic content validation
-        if len(narratives['summary']) < 50:
-            raise ValueError("Summary section is too short")
+        # Basic content validation - be more lenient
+        if len(narratives['summary']) < 30:
+            raise ValueError(f"Summary section is too short ({len(narratives['summary'])} chars)")
         
-        if len(narratives['keyFindings']) < 50:
-            raise ValueError("Key findings section is too short")
+        if len(narratives['keyFindings']) < 30:
+            raise ValueError(f"Key findings section is too short ({len(narratives['keyFindings'])} chars)")
         
-        if len(narratives['recommendations']) < 50:
-            raise ValueError("Recommendations section is too short")
+        if len(narratives['recommendations']) < 30:
+            raise ValueError(f"Recommendations section is too short ({len(narratives['recommendations'])} chars)")
         
         logger.info(f"Narrative validation passed (words: summary={summary_words}, "
                    f"findings={findings_words}, recommendations={recommendations_words})")

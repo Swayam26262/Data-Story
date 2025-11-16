@@ -11,6 +11,7 @@ import os
 import logging
 import traceback
 from pymongo import MongoClient
+import numpy as np
 
 from config import config
 from services.preprocessor import DataPreprocessor
@@ -24,6 +25,34 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+def convert_numpy_types(obj: Any) -> Any:
+    """
+    Recursively convert numpy types to native Python types for JSON serialization
+    
+    Args:
+        obj: Object that may contain numpy types
+        
+    Returns:
+        Object with all numpy types converted to Python types
+    """
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(convert_numpy_types(item) for item in obj)
+    else:
+        return obj
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -81,7 +110,7 @@ def update_job_status(job_id: str, status: str, stage: str = None,
         progress: Progress percentage (0-100)
         error: Error details if failed
     """
-    if not jobs_collection:
+    if jobs_collection is None:
         logger.warning("MongoDB not available, skipping job status update")
         return
     
@@ -193,6 +222,11 @@ async def analyze_data(request: AnalyzeRequest):
             narratives = narrative_gen.generate_narrative(analysis, metadata, audience_level)
             logger.info("Narrative generation complete")
         except Exception as e:
+            # Log detailed error information for debugging
+            logger.error(f"Narrative generation failed: {str(e)}", exc_info=True)
+            logger.error(f"Analysis keys: {list(analysis.keys())}")
+            logger.error(f"Metadata keys: {list(metadata.keys())}")
+            
             error_detail = {
                 'code': 'NARRATIVE_GENERATION_ERROR',
                 'message': f"Failed to generate narrative: {str(e)}",
@@ -203,15 +237,15 @@ async def analyze_data(request: AnalyzeRequest):
         
         # Stage 4: Visualization Selection
         update_job_status(job_id, 'processing', 'creating_visualizations', 80)
-        logger.info("Stage 4: Selecting visualizations")
+        logger.info("Stage 4: Selecting visualizations with advanced chart types")
         
         try:
-            visualizer = VisualizationSelector(max_charts=4)
+            visualizer = VisualizationSelector(max_charts=6)
             chart_specs = visualizer.select_visualizations(df, metadata, analysis)
             
             # Generate final chart configurations
             charts = [visualizer.generate_chart_config(chart) for chart in chart_specs]
-            logger.info(f"Visualization selection complete: {len(charts)} charts created")
+            logger.info(f"Visualization selection complete: {len(charts)} charts created with types: {[c['type'] for c in charts]}")
         except Exception as e:
             error_detail = {
                 'code': 'VISUALIZATION_ERROR',
@@ -225,11 +259,15 @@ async def analyze_data(request: AnalyzeRequest):
         update_job_status(job_id, 'completed', progress=100)
         logger.info(f"Analysis complete for job {job_id}")
         
+        # Convert numpy types to native Python types for JSON serialization
+        analysis_serializable = convert_numpy_types(analysis)
+        charts_serializable = convert_numpy_types(charts)
+        
         # Return complete story payload
         return AnalyzeResponse(
             narratives=narratives,
-            charts=charts,
-            statistics=analysis
+            charts=charts_serializable,
+            statistics=analysis_serializable
         )
         
     except HTTPException:

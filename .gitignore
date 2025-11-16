@@ -35,9 +35,16 @@ yarn-error.log*
 .pnpm-debug.log*
 lerna-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-!.env.example
+# env files - NEVER commit these
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.test
+*.env
+python-service/.env
+python-service/.env.*
 
 # vercel
 .vercel
@@ -70,3 +77,16 @@ test-*.ts
 *.tmp
 *.temp
 .cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+python-service/__pycache__/
+python-service/**/__pycache__/
+python-service/.pytest_cache/
+python-service/venv/
+python-service/env/
+python-service/*.egg-info/
