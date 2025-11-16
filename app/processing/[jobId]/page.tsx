@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Navbar from '@/components/Navbar';
 import ProgressBar from '@/components/ProgressBar';
 import { MultiStageProgressBar, Stage } from '@/components/ProgressBar';
 import ErrorMessage from '@/components/ErrorMessage';
@@ -74,7 +75,7 @@ export default function ProcessingPage({
           clearInterval(pollInterval);
           // Redirect to story viewer after a brief delay
           setTimeout(() => {
-            router.push(`/stories/${data.storyId}`);
+            router.push(`/story/${data.storyId}`);
           }, 1500);
         }
 
@@ -127,20 +128,23 @@ export default function ProcessingPage({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <ErrorMessage
-            title="Error Loading Job"
-            message={error}
-            retryable={false}
-            className="mb-4"
-          />
-          <button
-            onClick={handleCancel}
-            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-          >
-            Back to Dashboard
-          </button>
+      <div className="min-h-screen bg-background-dark">
+        <Navbar variant="app" />
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            <ErrorMessage
+              title="Error Loading Job"
+              message={error}
+              retryable={false}
+              className="mb-4"
+            />
+            <button
+              onClick={handleCancel}
+              className="w-full px-4 py-2 bg-primary text-background-dark rounded-md hover:bg-opacity-80 transition-all font-bold"
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -148,21 +152,24 @@ export default function ProcessingPage({
 
   if (jobStatus?.status === 'failed') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <ErrorMessage
-            title="Processing Failed"
-            message={jobStatus.error?.message || 'An error occurred during processing'}
-            retryable={jobStatus.canRetry}
-            onRetry={jobStatus.canRetry ? handleRetry : undefined}
-            className="mb-4"
-          />
-          <button
-            onClick={handleCancel}
-            className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-          >
-            Back to Dashboard
-          </button>
+      <div className="min-h-screen bg-background-dark">
+        <Navbar variant="app" />
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            <ErrorMessage
+              title="Processing Failed"
+              message={jobStatus.error?.message || 'An error occurred during processing'}
+              retryable={jobStatus.canRetry}
+              onRetry={jobStatus.canRetry ? handleRetry : undefined}
+              className="mb-4"
+            />
+            <button
+              onClick={handleCancel}
+              className="w-full px-4 py-2 bg-secondary/20 border border-secondary text-white rounded-md hover:bg-secondary/30 transition-all font-bold"
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -192,17 +199,19 @@ export default function ProcessingPage({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full bg-white rounded-lg shadow-lg p-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Creating Your Story
-          </h1>
-          <p className="text-gray-600">
-            Please wait while we analyze your data and generate insights
-          </p>
-        </div>
+    <div className="min-h-screen bg-background-dark">
+      <Navbar variant="app" />
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-[#0A0A0A] border border-secondary/50 rounded-xl shadow-lg p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Creating Your Story
+            </h1>
+            <p className="text-[#D4D4D4]">
+              Please wait while we analyze your data and generate insights
+            </p>
+          </div>
 
         {/* Loading spinner if no job status yet */}
         {!jobStatus && (
@@ -221,7 +230,7 @@ export default function ProcessingPage({
               estimatedTimeRemaining={estimatedTime}
               size="lg"
             />
-            <p className="mt-2 text-sm text-gray-600 text-center">
+            <p className="mt-2 text-sm text-[#A0A0A0] text-center">
               {STAGE_DESCRIPTIONS[jobStatus.currentStage]}
             </p>
           </div>
@@ -238,10 +247,11 @@ export default function ProcessingPage({
         <div className="text-center">
           <button
             onClick={handleCancel}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
+            className="text-sm text-[#A0A0A0] hover:text-white underline transition-colors"
           >
             Cancel and return to dashboard
           </button>
+        </div>
         </div>
       </div>
     </div>

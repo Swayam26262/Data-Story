@@ -110,7 +110,7 @@ class DataPreprocessor:
         
         # Try to parse as datetime
         try:
-            pd.to_datetime(series.dropna().head(100), errors='raise', infer_datetime_format=True)
+            pd.to_datetime(series.dropna().head(100), errors='raise')
             return True
         except (ValueError, TypeError):
             return False

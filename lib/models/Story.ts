@@ -1,4 +1,12 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
+import type {
+  AdvancedChartType,
+  AllChartTypes,
+  StatisticalOverlay,
+  InteractionConfig,
+  Insight,
+  EnhancedStatistics,
+} from '@/types/chart';
 
 export type ChartType = 'line' | 'bar' | 'scatter' | 'pie';
 export type TrendDirection = 'increasing' | 'decreasing' | 'stable';
@@ -31,10 +39,17 @@ export interface IChartConfig {
 
 export interface IChart {
   chartId: string;
-  type: ChartType;
+  type: ChartType | AdvancedChartType;
   title: string;
   data: ChartData;
   config: IChartConfig;
+  statistics?: StatisticalOverlay;
+  interactions?: InteractionConfig;
+  insights?: {
+    primary: string;
+    secondary?: string;
+    significance: number;
+  };
 }
 
 export interface ITrend {
@@ -59,7 +74,7 @@ export interface IDistribution {
   outliers: number;
 }
 
-export interface IStatistics {
+export interface IStatistics extends EnhancedStatistics {
   trends: ITrend[];
   correlations: ICorrelation[];
   distributions: IDistribution[];
@@ -86,7 +101,6 @@ const StorySchema = new Schema<IStory>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true,
     },
     title: {
       type: String,
@@ -137,7 +151,20 @@ const StorySchema = new Schema<IStory>(
         },
         type: {
           type: String,
-          enum: ['line', 'bar', 'scatter', 'pie'],
+          enum: [
+            'line',
+            'bar',
+            'scatter',
+            'pie',
+            'combination',
+            'heatmap',
+            'boxplot',
+            'waterfall',
+            'funnel',
+            'radar',
+            'area',
+            'candlestick',
+          ],
           required: true,
         },
         title: {
@@ -153,6 +180,19 @@ const StorySchema = new Schema<IStory>(
           yAxis: String,
           colors: [String],
           legend: Boolean,
+        },
+        statistics: {
+          type: Schema.Types.Mixed,
+          required: false,
+        },
+        interactions: {
+          type: Schema.Types.Mixed,
+          required: false,
+        },
+        insights: {
+          primary: String,
+          secondary: String,
+          significance: Number,
         },
       },
     ],
@@ -188,6 +228,22 @@ const StorySchema = new Schema<IStory>(
           outliers: Number,
         },
       ],
+      advancedTrends: {
+        type: Schema.Types.Mixed,
+        required: false,
+      },
+      correlationMatrix: {
+        type: Schema.Types.Mixed,
+        required: false,
+      },
+      outlierAnalysis: {
+        type: Schema.Types.Mixed,
+        required: false,
+      },
+      insights: {
+        type: Schema.Types.Mixed,
+        required: false,
+      },
     },
     processingTime: {
       type: Number,

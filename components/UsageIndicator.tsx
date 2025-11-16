@@ -51,17 +51,17 @@ export default function UsageIndicator({
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg shadow p-4 animate-pulse ${className}`}>
-        <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-        <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+      <div className={`bg-[#0A0A0A] rounded-2xl shadow-lg p-4 animate-pulse border border-[#2a2a2a] ${className}`}>
+        <div className="h-4 bg-white/10 rounded w-1/2 mb-2"></div>
+        <div className="h-8 bg-white/10 rounded w-3/4"></div>
       </div>
     );
   }
 
   if (error || !usage) {
     return (
-      <div className={`bg-red-50 border border-red-200 rounded-lg p-4 ${className}`}>
-        <p className="text-red-600 text-sm">{error || 'Unable to load usage data'}</p>
+      <div className={`bg-red-500/10 border border-red-500/50 rounded-2xl p-4 ${className}`}>
+        <p className="text-red-400 text-sm">{error || 'Unable to load usage data'}</p>
       </div>
     );
   }
@@ -80,13 +80,13 @@ export default function UsageIndicator({
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
+    <div className={`bg-[#0A0A0A] rounded-2xl shadow-lg p-6 border border-[#2a2a2a] ${className}`}>
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-white">
             {usage.tierDisplayName} Plan
           </h3>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-[#D4D4D4] mt-1">
             {isUnlimited ? (
               'Unlimited stories'
             ) : (
@@ -99,7 +99,7 @@ export default function UsageIndicator({
         {usage.tier === 'free' && onUpgradeClick && (
           <button
             onClick={onUpgradeClick}
-            className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+            className="text-sm font-medium text-primary hover:text-primary/80 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/50 rounded px-2 py-1"
           >
             Upgrade
           </button>
@@ -109,14 +109,14 @@ export default function UsageIndicator({
       {!isUnlimited && (
         <>
           {/* Progress Bar */}
-          <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-3">
+          <div className="relative w-full h-3 bg-white/10 rounded-full overflow-hidden mb-3">
             <div
               className={`absolute top-0 left-0 h-full transition-all duration-500 rounded-full ${
                 isAtLimit
                   ? 'bg-red-500'
                   : isNearLimit
                   ? 'bg-yellow-500'
-                  : 'bg-green-500'
+                  : 'bg-primary'
               }`}
               style={{ width: `${Math.min(percentage, 100)}%` }}
             />
@@ -127,10 +127,10 @@ export default function UsageIndicator({
             <span
               className={`font-medium ${
                 isAtLimit
-                  ? 'text-red-600'
+                  ? 'text-red-400'
                   : isNearLimit
-                  ? 'text-yellow-600'
-                  : 'text-gray-600'
+                  ? 'text-yellow-400'
+                  : 'text-[#D4D4D4]'
               }`}
             >
               {isAtLimit ? (
@@ -142,17 +142,17 @@ export default function UsageIndicator({
                 </>
               )}
             </span>
-            <span className="text-gray-500">
+            <span className="text-[#A0A0A0]">
               Resets {formatResetDate(usage.resetDate)}
             </span>
           </div>
 
           {/* Upgrade CTA for near/at limit */}
           {(isNearLimit || isAtLimit) && usage.tier === 'free' && onUpgradeClick && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="mt-4 pt-4 border-t border-white/10">
               <button
                 onClick={onUpgradeClick}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-md hover:shadow-lg"
+                className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 text-background-dark font-semibold py-2 px-4 rounded-lg transition-all duration-300 ease-in-out shadow-md hover:shadow-lg transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
                 Upgrade for More Stories
               </button>

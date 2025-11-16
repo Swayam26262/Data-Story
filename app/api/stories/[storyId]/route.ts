@@ -4,10 +4,11 @@ import dbConnect from '@/lib/db';
 import Story from '@/lib/models/Story';
 import User from '@/lib/models/User';
 import { deleteFile } from '@/lib/storage';
+import mongoose from 'mongoose';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { storyId: string } }
+  { params }: { params: Promise<{ storyId: string }> }
 ) {
   try {
     // Verify authentication
@@ -20,7 +21,16 @@ export async function GET(
     }
 
     const userId = (authResult.user._id as any).toString();
-    const { storyId } = params;
+    const { storyId } = await params;
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(storyId)) {
+      console.log(`Invalid story ID format: ${storyId}`);
+      return NextResponse.json(
+        { error: { code: 'INVALID_ID', message: 'Invalid story ID format' } },
+        { status: 400 }
+      );
+    }
 
     // Connect to database
     await dbConnect();
@@ -29,6 +39,7 @@ export async function GET(
     const story = await Story.findById(storyId).lean();
 
     if (!story) {
+      console.log(`Story not found: ${storyId} for user: ${userId}`);
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: 'Story not found' } },
         { status: 404 }
@@ -43,13 +54,14 @@ export async function GET(
       );
     }
 
-    // Transform story for response
+    // Transform story for response with enhanced statistics
     const transformedStory = {
       storyId: story._id.toString(),
       title: story.title,
       createdAt: story.createdAt,
       narratives: story.narratives,
       charts: story.charts,
+      statistics: story.statistics, // Include enhanced statistics
       metadata: {
         datasetRows: story.dataset.rowCount,
         columnsAnalyzed: story.dataset.columnCount,
@@ -75,7 +87,7 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { storyId: string } }
+  { params }: { params: Promise<{ storyId: string }> }
 ) {
   try {
     // Verify authentication
@@ -88,7 +100,16 @@ export async function DELETE(
     }
 
     const userId = (authResult.user._id as any).toString();
-    const { storyId } = params;
+    const { storyId } = await params;
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(storyId)) {
+      console.log(`Invalid story ID format: ${storyId}`);
+      return NextResponse.json(
+        { error: { code: 'INVALID_ID', message: 'Invalid story ID format' } },
+        { status: 400 }
+      );
+    }
 
     // Connect to database
     await dbConnect();
@@ -97,6 +118,7 @@ export async function DELETE(
     const story = await Story.findById(storyId);
 
     if (!story) {
+      console.log(`Story not found for deletion: ${storyId} for user: ${userId}`);
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: 'Story not found' } },
         { status: 404 }

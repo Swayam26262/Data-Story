@@ -155,7 +155,10 @@ class TestOutlierDetector:
         
         assert len(results) == 1
         assert results[0]['column'] == 'value'
-        assert results[0]['count'] >= 2  # Should detect at least 2 outliers
+        # Check the new structure with methods
+        assert 'methods' in results[0]
+        assert 'iqr' in results[0]['methods']
+        assert results[0]['methods']['iqr']['count'] >= 2  # Should detect at least 2 outliers
     
     def test_no_outliers(self):
         """Test with data that has no outliers"""

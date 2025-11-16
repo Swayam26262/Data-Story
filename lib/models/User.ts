@@ -26,6 +26,7 @@ export interface IUser extends Document {
   totalStoriesCreated: number;
   preferences: IUserPreferences;
   limits: IUserLimits;
+  chartConfiguration?: Record<string, unknown>;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   
@@ -48,7 +49,6 @@ const UserSchema = new Schema<IUser>(
       unique: true,
       lowercase: true,
       trim: true,
-      index: true,
     },
     passwordHash: {
       type: String,
@@ -107,6 +107,10 @@ const UserSchema = new Schema<IUser>(
         default: 1,
       },
     },
+    chartConfiguration: {
+      type: Schema.Types.Mixed,
+      default: undefined,
+    },
     resetPasswordToken: {
       type: String,
       default: undefined,
@@ -136,6 +140,9 @@ UserSchema.pre('save', function (next) {
 
 // Method to check if user can create more stories
 UserSchema.methods.canCreateStory = function (): boolean {
+  if (this.limits.storiesPerMonth === -1) {
+    return true;
+  }
   return this.storiesThisMonth < this.limits.storiesPerMonth;
 };
 

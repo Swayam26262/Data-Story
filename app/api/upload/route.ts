@@ -260,9 +260,5 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Configure route to handle file uploads
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// Note: bodyParser configuration is not needed in App Router
+// Next.js handles multipart/form-data automatically

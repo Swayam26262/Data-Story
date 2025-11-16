@@ -53,19 +53,16 @@ const JobSchema = new Schema<IJob>(
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true,
     },
     status: {
       type: String,
       enum: ['queued', 'processing', 'completed', 'failed'],
       default: 'queued',
-      index: true,
     },
     currentStage: {
       type: String,

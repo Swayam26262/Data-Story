@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export interface StoryCardProps {
   storyId: string;
@@ -32,6 +32,24 @@ export default function StoryCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Close delete modal on Escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showDeleteConfirm) {
+        setShowDeleteConfirm(false);
+        setDeleteError(null);
+      }
+    };
+
+    if (showDeleteConfirm) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showDeleteConfirm]);
 
   const formatDate = (date: Date) => {
     const now = new Date();
@@ -87,9 +105,9 @@ export default function StoryCard({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-200 overflow-hidden group">
+    <div className="bg-[#0A0A0A] rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out overflow-hidden group border border-[#2a2a2a] transform hover:scale-[1.02]">
       {/* Thumbnail */}
-      <div className="relative h-48 bg-gradient-to-br from-indigo-100 to-purple-100 overflow-hidden">
+      <div className="relative h-48 bg-gradient-to-br from-primary/10 to-secondary/10 overflow-hidden">
         {thumbnail ? (
           <img
             src={thumbnail}
@@ -99,7 +117,7 @@ export default function StoryCard({
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <svg
-              className="w-16 h-16 text-indigo-300"
+              className="w-16 h-16 text-primary/50"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -115,10 +133,10 @@ export default function StoryCard({
         )}
         
         {/* Hover overlay with quick actions */}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 ease-in-out flex items-center justify-center opacity-0 group-hover:opacity-100">
           <button
             onClick={() => onView?.(storyId)}
-            className="px-4 py-2 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 bg-primary text-background-dark rounded-lg font-medium hover:bg-opacity-80 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             View Story
           </button>
@@ -127,16 +145,16 @@ export default function StoryCard({
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+        <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
           {title}
         </h3>
         
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-[#A0A0A0] mb-4">
           {formatDate(createdAt)}
         </p>
 
         {/* Metadata */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mb-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#D4D4D4] mb-4">
           <div className="flex items-center">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -168,17 +186,19 @@ export default function StoryCard({
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => onView?.(storyId)}
-            className="flex-1 px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+            className="flex-1 px-3 py-2 text-sm font-medium text-background-dark bg-primary hover:bg-opacity-80 rounded-lg transition-all duration-300 ease-in-out touch-manipulation transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            aria-label="View story"
           >
             View
           </button>
           <button
             onClick={() => onExport?.(storyId)}
-            className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className="p-2 text-sm font-medium text-[#D4D4D4] border border-secondary/50 hover:bg-white/5 rounded-lg transition-all duration-300 ease-in-out touch-manipulation transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-secondary/50"
             title="Export PDF"
+            aria-label="Export PDF"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -186,8 +206,9 @@ export default function StoryCard({
           </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="px-3 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+            className="p-2 text-sm font-medium text-red-400 border border-red-500/50 hover:bg-red-500/10 rounded-lg transition-all duration-300 ease-in-out touch-manipulation transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500/50"
             title="Delete"
+            aria-label="Delete story"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -198,40 +219,40 @@ export default function StoryCard({
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Story</h3>
-            <p className="text-gray-600 mb-6">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-[#0A0A0A] rounded-2xl max-w-md w-full p-4 sm:p-6 border border-[#2a2a2a] shadow-2xl animate-scaleIn">
+            <h3 className="text-lg font-semibold text-white mb-2">Delete Story</h3>
+            <p className="text-[#D4D4D4] mb-6">
               Are you sure you want to delete "{title}"? This action cannot be undone.
             </p>
             
             {/* Error Message */}
             {deleteError && (
-              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="mb-4 bg-red-500/10 border border-red-500/50 rounded-lg p-3">
                 <div className="flex items-start">
-                  <svg className="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-red-400 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-sm text-red-700">{deleteError}</p>
+                  <p className="text-sm text-red-300">{deleteError}</p>
                 </div>
               </div>
             )}
             
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => {
                   setShowDeleteConfirm(false);
                   setDeleteError(null);
                 }}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 text-sm font-medium text-[#D4D4D4] border border-secondary/50 hover:bg-white/5 rounded-lg transition-all duration-300 ease-in-out disabled:opacity-50 touch-manipulation focus:outline-none focus:ring-2 focus:ring-secondary/50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-300 ease-in-out disabled:opacity-50 touch-manipulation focus:outline-none focus:ring-2 focus:ring-red-500/50 transform hover:scale-[1.02]"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>

@@ -90,6 +90,7 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    qualities: [75, 100],
   },
 
   // Enable experimental features for performance
@@ -101,6 +102,18 @@ const nextConfig: NextConfig = {
   turbopack: {
     // Empty config to silence the warning
     // Turbopack handles optimization automatically
+  },
+
+  // Webpack configuration for development
+  webpack: (config, { dev, isServer }) => {
+    if (dev) {
+      // Suppress invalid source map warnings from node_modules
+      config.ignoreWarnings = [
+        /Failed to parse source map/,
+        /Invalid source map/,
+      ];
+    }
+    return config;
   },
 };
 

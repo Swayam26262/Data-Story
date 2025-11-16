@@ -78,18 +78,23 @@ export async function triggerAnalysis(
       }),
     })
       .then(async (response) => {
+        console.log(`Received response from Python service for job ${jobId}: ${response.status}`);
         if (!response.ok) {
           const errorText = await response.text();
+          console.error(`Python service error for job ${jobId}:`, errorText);
           throw new Error(`Analysis service error: ${errorText}`);
         }
         return response.json();
       })
       .then(async (result: AnalysisResult) => {
         // Handle successful completion
+        console.log(`Analysis completed for job ${jobId}, creating story...`);
+        console.log(`Result contains ${result.charts?.length || 0} charts`);
         await handleJobCompletion(jobId, userId, result);
       })
       .catch(async (error) => {
         // Handle failure
+        console.error(`Analysis failed for job ${jobId}:`, error);
         await handleJobFailure(jobId, error);
       });
 
@@ -128,7 +133,10 @@ export async function handleJobCompletion(
     const processingTime = Date.now() - new Date(job.createdAt).getTime();
 
     // Determine column count from statistics
-    const columnCount = metadata.columnCount || result.statistics.distributions.length;
+    const columnCount = metadata.columnCount || 
+                       (result.statistics as any).summary?.total_columns || 
+                       result.statistics.distributions?.length || 
+                       0;
 
     // Create story record
     const story = new Story({
@@ -150,6 +158,7 @@ export async function handleJobCompletion(
     });
 
     await story.save();
+    console.log(`Story created with ID: ${story._id}`);
 
     // Update job with story ID and mark as completed
     job.storyId = story._id as Types.ObjectId;
@@ -157,6 +166,7 @@ export async function handleJobCompletion(
     job.progress = 100;
     job.currentStage = 'creating_visualizations';
     await job.save();
+    console.log(`Job ${jobId} updated with storyId: ${story._id}`);
 
     // Increment user's story count
     const user = await User.findById(userId);
